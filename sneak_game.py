@@ -5,19 +5,16 @@ from collections import namedtuple
 import numpy as np
 
 class Direction(Enum):
+    """
+    Enumaration of possible movement directions for the snake.
+    """
     RIGHT = 1
     LEFT = 2
     UP = 3
     DOWN = 4
 
+# Represents a point in 2D space (grid position)
 Point = namedtuple('Point', 'x, y')
-
-# rgb colors
-WHITE = (255, 255, 255)
-RED = (200,0,0)
-BLUE1 = (0, 0, 255)
-BLUE2 = (0, 100, 255)
-BLACK = (0,0,0)
 
 class SnakeGame:
     """
@@ -34,6 +31,13 @@ class SnakeGame:
         h (int): Height of the game window in pixels.
         human (bool): If True, enables keyboard control. If False, expects AI actions.
     """
+
+    # RGB color definitions
+    WHITE = (255, 255, 255)
+    RED = (200,0,0)
+    BLUE1 = (0, 0, 255)
+    BLUE2 = (0, 100, 255)
+    BLACK = (0,0,0)
 
     def __init__(self, w:int=640, h:int=480, human:bool=False):
 
@@ -62,6 +66,13 @@ class SnakeGame:
 
 
     def reset(self):
+        """
+        Reset the game to its initial state.
+
+        This is called:
+            - At the start
+            - After game over (during training)
+        """
         # init game state
         self.direction = Direction.RIGHT
 
@@ -77,6 +88,11 @@ class SnakeGame:
 
 
     def _place_food(self):
+        """
+        Randomly place food on the grid.
+
+        Ensures food does not spawn on the snake body.
+        """
         x = random.randint(0, (self.w-self.block_size )//self.block_size )*self.block_size
         y = random.randint(0, (self.h-self.block_size )//self.block_size )*self.block_size
         self.food = Point(x, y)
@@ -85,9 +101,19 @@ class SnakeGame:
 
     def play_step(self, action:np.array=None):
         """
-        
-        """
+        Execute one step of the game.
 
+        For AI:
+            - Receives an action [straight, right, left]
+
+        For human:
+            - Reads keyboard input
+
+        Returns:
+            reward (int): Reward obtained from this step
+            game_over (bool): Whether the game ended
+            score (int): Current score
+        """
         self.frame_iteration += 1 # control the number of agent iterations 
 
         # 1. collect user input
@@ -138,17 +164,24 @@ class SnakeGame:
 
     def is_collision(self, pt=None):
         """
-        Detect snake collision
+        Check whether a point collides with:
+            - Wall boundaries
+            - Snake body
 
         Args:
-            pt: 
+            pt (Point, optional): Point to check (default = snake head)
+
+        Returns:
+            bool: True if collision occurs
         """
         if pt is None:
             pt = self.head
-        # hits boundary
-        if pt.x > self.w - self.block_size or pt.x < 0 or pt.y > self.h - self.block_size or pt.y < 0:
+        # Wall collision
+        if (pt.x > self.w - self.block_size or pt.x < 0 or 
+            pt.y > self.h - self.block_size or pt.y < 0
+        ):
             return True
-        # hits itself
+        # Self collision
         if pt in self.snake[1:]:
             return True
 
@@ -156,26 +189,41 @@ class SnakeGame:
 
 
     def _update_ui(self):
-        self.display.fill(BLACK)
+        """
+        Render the game:
+            - Snake
+            - Food
+            - Score
+        """
+        self.display.fill(self.BLACK)
 
+        # Draw snake
         for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, self.block_size, self.block_size))
-            pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            pygame.draw.rect(self.display, self.BLUE1, pygame.Rect(pt.x, pt.y, self.block_size, self.block_size))
+            pygame.draw.rect(self.display, self.BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
 
-        pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, self.block_size, self.block_size))
+        # Draw food
+        pygame.draw.rect(self.display, self.RED, pygame.Rect(self.food.x, self.food.y, self.block_size, self.block_size))
 
-        text = self.font.render("Score: " + str(self.score), True, WHITE)
+        # Write score
+        text = self.font.render("Score: " + str(self.score), True, self.WHITE)
         self.display.blit(text, [0, 0])
+
         pygame.display.flip()
 
 
     def _move(self, action:np.array=None) -> None:
         """
-        Update the sneak position.
+        Update snake direction and position.
+
+        For AI:
+            action = [straight, right, left]
+
+        For human:
+            direction is already updated via keyboard
 
         Args:
-            action (np.array | None): For AI agent is spected an array of the action. For the 
-            human user is not spected (None).
+            action (np.ndarray, optional): Action vector (AI only)
         """
         # action positions = [straight, right, left]
 
@@ -213,7 +261,6 @@ if __name__ == "__main__":
 
     while True:
         _, game_over, score = game.play_step()
-
         if game_over == True:
             break
 
