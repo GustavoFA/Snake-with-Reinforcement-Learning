@@ -4,29 +4,72 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from datetime import datetime
+
 class LinearQNet(nn.Module):
+    """
+    Feedforward neural network used to approximate Q-Values.
+
+    Architecture:
+        Input : 11 (state_size)
+        Linear layer : 256 (hidden_size) + ReLU
+        Linear layer : 3 (output_size) 
+
+    Output:
+        A vector of Q-values for each possible action:
+        [Q(straight), Q(right), Q(left)]
+    """
 
     def __init__(self, input_size:int=11, hidden_size:int=256, output_size:int=3):
+        """
+        Initialize the neural network.
+
+        Args:
+            input_size (int): Number of state features.
+            hidden_size (int): Number of neurons in hidden layer.
+            output_size (int): Number of possible actions.
+        """
         super().__init__()
 
         self.linear1 = nn.Linear(input_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, output_size)
         
     
-    def forward(self, x):
+    def forward(self, x:torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass of the network.
+
+        Args:
+            x (Tensor): Input state tensor.
+
+        Returns:
+            Tensor: Predicted Q-values for each action.
+        """
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
     
-    def save(self, file_name='model.pth'):
-        model_folder_path = './model'
+    def save(self, file_name:str=None):
+        """
+        Save the model weights.
+
+        Args:
+            file_name (str, None): Name of the file (must end with .pth).
+        """
+        model_folder_path = './model_saved'
         os.makedirs(model_folder_path, exist_ok=True)
+
+        if file_name is None:
+            file_name = f'model_{datetime.now().strftime("%Y_%m_%d_%H_%M_%S")}.pth'
 
         file_name = os.path.join(model_folder_path, file_name)
 
         torch.save(self.state_dict(), file_name)
 
 class QTrainer:
+    """
+    
+    """
     def __init__(self, model, lr, gamma):
         self.model = model
         self.lr = lr
