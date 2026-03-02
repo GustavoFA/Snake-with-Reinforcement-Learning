@@ -141,10 +141,11 @@ class QTrainer:
         target = pred.clone().detach() # prevents unwanted gradient flow
 
         # Update Q-values using Bellman equation
+        next_model_pred = self.model(next_state)
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
-                Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
+                Q_new = reward[idx] + self.gamma * torch.max(next_model_pred[idx])
 
             # Update only the Q-value for the action taken
             target[idx][torch.argmax(action[idx]).item()] = Q_new
