@@ -83,5 +83,7 @@ Soon
 ## Results
 Soon
 
+## Improvements
 
+* Add possibility to change the device 
 
