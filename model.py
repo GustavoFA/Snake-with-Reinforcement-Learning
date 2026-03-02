@@ -137,7 +137,8 @@ class QTrainer:
         # Predict Q values with current state
         pred = self.model(state)
         # Clone predictions to build target Q-values
-        target = pred.clone()
+        # target = pred.clone()
+        target = pred.clone().detach() # prevents unwanted gradient flow
 
         # Update Q-values using Bellman equation
         for idx in range(len(done)):
