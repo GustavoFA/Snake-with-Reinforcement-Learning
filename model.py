@@ -4,7 +4,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+import numpy as np
 from datetime import datetime
+from typing import Union, Sequence
 
 class LinearQNet(nn.Module):
     """
@@ -68,16 +70,57 @@ class LinearQNet(nn.Module):
 
 class QTrainer:
     """
-    
+    Handles training of the Q-network using the Bellman equation.
+
+    Uses:
+        - Adam optimizer
+        - Mean Squared Error (MSE) Loss
+
+    This class performs one trainig step using:
+        (state, action, reward, next_state, done)
     """
     def __init__(self, model, lr, gamma):
+        """
+        Initialize trainer.
+
+        Args:
+            model (nn.Module): Q-network model.
+            lr (float): Learning rate.
+            gamma (float): Discount factor (importance of future rewards).
+        """
         self.model = model
         self.lr = lr
         self.gamma = gamma
+
+        # Optimizer
         self.optim = optim.Adam(self.model.parameters(), lr=self.lr)
+        # Criterion
         self.criterion = nn.MSELoss()
 
-    def train_step(self, state, action, reward, next_state, done) -> tuple:
+    def train_step(
+        self,
+        state: Union[np.ndarray, Sequence],
+        action: Union[np.ndarray, Sequence],
+        reward: Union[float, Sequence],
+        next_state: Union[np.ndarray, Sequence],
+        done: Union[bool, Sequence]
+    ) -> None:
+        """
+        Perform one training step.
+
+        This applies the Bellman equation:
+            Q_new = reward + gamma * max(next_Q)   (if not done)
+
+        Args:
+            state: Current state(s)
+            action: Action(s) taken
+            reward: Reward(s) received
+            next_state: Next state(s)
+            done: Whether episode ended
+
+        Notes:
+            Supports both single samples and batches.
+        """
         state = torch.tensor(state, dtype=torch.float)
         action = torch.tensor(action, dtype=torch.float)
         reward = torch.tensor(reward, dtype=torch.float)
@@ -93,19 +136,23 @@ class QTrainer:
 
         # Predict Q values with current state
         pred = self.model(state)
-
-        # Compute Qnew (only when it's not done)
+        # Clone predictions to build target Q-values
         target = pred.clone()
 
+        # Update Q-values using Bellman equation
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
-                Q_new = reward[idx] + self.gamma *torch.max(self.model(next_state[idx]))
+                Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
 
+            # Update only the Q-value for the action taken
             target[idx][torch.argmax(action[idx]).item()] = Q_new
         
+        # Zero gradients before backpropagation
         self.optim.zero_grad()
+        # Compute Q-values loss 
         loss = self.criterion(target, pred)
+        # Backpropagation
         loss.backward()
-
+        # Update model weights
         self.optim.step()
