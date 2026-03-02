@@ -76,7 +76,7 @@ class QTrainer:
         - Adam optimizer
         - Mean Squared Error (MSE) Loss
 
-    This class performs one trainig step using:
+    This class performs one training step using:
         (state, action, reward, next_state, done)
     """
     def __init__(self, model, lr, gamma):
