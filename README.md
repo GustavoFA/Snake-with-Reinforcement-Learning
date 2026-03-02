@@ -1,4 +1,4 @@
-# Snake more Reinforcement Learning
+# Snake with Reinforcement Learning
 
 In this project we'll train a model with RL (using PyTorch) and apply it on a Pygame environment. I'm following this [case](https://www.youtube.com/playlist?list=PLqnslRFeH2UrDh7vUmJ60YrmWd64mTTKV). For more details go to the [main project](https://github.com/patrickloeber/snake-ai-pytorch).
 
