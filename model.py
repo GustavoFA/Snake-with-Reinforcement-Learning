@@ -64,9 +64,9 @@ class LinearQNet(nn.Module):
         if file_name is None:
             file_name = f'model_{datetime.now().strftime("%Y_%m_%d_%H_%M_%S")}.pth'
 
-        file_name = os.path.join(model_folder_path, file_name)
+        file_path = os.path.join(model_folder_path, file_name)
 
-        torch.save(self.state_dict(), file_name)
+        torch.save(self.state_dict(), file_path)
 
 class QTrainer:
     """
